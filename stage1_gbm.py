@@ -35,12 +35,13 @@ def load_prices(symbol: str, start: str, demo: bool) -> pd.Series:
     cache = Path(__file__).resolve().parent / ".cache" / f"{symbol}_{start}_{date.today():%Y%m%d}.csv"
     if cache.exists():
         s = pd.read_csv(cache, index_col=0, parse_dates=True).iloc[:, 0]
-        return s.rename(symbol)
-    s, source = _download(symbol, start)
+        source = s.name                         # the cache's column header holds the source
+    else:
+        s, source = _download(symbol, start)
+        cache.parent.mkdir(exist_ok=True)
+        s.rename(source).to_csv(cache)
     print(f"[data source: {source}, {len(s)} rows, last {s.index[-1].date()}]")
-    cache.parent.mkdir(exist_ok=True)
-    s.to_csv(cache)
-    return s
+    return s.rename(symbol)
 
 
 def _download(symbol: str, start: str):

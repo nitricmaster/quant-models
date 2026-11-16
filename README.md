@@ -5,12 +5,14 @@ The project works in four stages. Each stage builds on the previous one, uses re
 ## Daily results
 Updated automatically after each A-share trading day by [the daily workflow](.github/workflows/daily.yml).
 
+Note: σ and μ depend on which data source answered that day. akshare and yfinance adjust for dividends differently, so σ can differ by more than a percentage point between them (e.g. 35.8% vs 37.47%), well beyond its ~0.8% standard error. The *Data source* column says which one was used; compare rows from the same source.
+
 <!-- RESULTS:START -->
 **Latest trading day: 2026-11-13** · close 28.47 · [full log](reports/2026-11-13/log.txt)
 
-| Date | Close | σ (annual) | μ (annual) | Excess kurtosis | 50ETF ATM IV | Hedge P&L / premium | Stock weight | 1-day VaR (hist.) |
-|---|---|---|---|---|---|---|---|---|
-| 2026-11-13 | 28.47 | 37.47% | 17.91% | 2.65 | 13.8% | -6.6% | 22.2% | 1,612 |
+| Date | Close | σ (annual) | μ (annual) | Excess kurtosis | 50ETF ATM IV | Hedge P&L / premium | Stock weight | 1-day VaR (hist.) | Data source |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-13 | 28.47 | 37.47% | 17.91% | 2.65 | 13.8% | -6.6% | 22.2% | 1,612 | yfinance |
 
 Showing the last 1 of 1 trading days. Full record: [reports/history.csv](reports/history.csv)
 <!-- RESULTS:END -->

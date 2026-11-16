@@ -139,7 +139,7 @@ def smile(chain, T):
     for K, row in w.iterrows():
         cp = 1 if K >= F else -1                # use the out-of-the-money side: more liquid, more vega
         px = row["C"] if cp == 1 else row["P"]
-        if px <= 0:
+        if px < 0.001:                          # quotes at the minimum tick carry no vol information
             continue
         rows.append((K, K / F, px, cp, implied_vol(px, F, K, T, D, cp)))
     s = pd.DataFrame(rows, columns=["strike", "moneyness", "price", "cp", "iv"]).dropna()

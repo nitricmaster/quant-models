@@ -52,7 +52,7 @@ COLUMNS = [  # (csv field, README header)
     ("date", "Date"), ("close", "Close"), ("sigma", "σ (annual)"), ("mu", "μ (annual)"),
     ("excess_kurtosis", "Excess kurtosis"), ("etf_atm_iv", "50ETF ATM IV"),
     ("hedge_pnl_mean", "Hedge P&L / premium"), ("stock_weight", "Stock weight"),
-    ("var_1d_hist", "1-day VaR (hist.)"),
+    ("var_1d_hist", "1-day VaR (hist.)"), ("source", "Data source"),
 ]
 START, END = "<!-- RESULTS:START -->", "<!-- RESULTS:END -->"
 
@@ -143,7 +143,8 @@ def main():
 
     if not a.demo:                                          # one summary row per trading day
         row = {
-            "date": date, "close": price,
+            "date": date, "close": round(price, 2),
+            "source": grab(r"\[data source: ([^,\]]+)", log),
             "sigma": grab(r"sigma \(annual\) =\s*([\d.]+%)", log),
             "mu": grab(r"mu    \(annual\) =\s*(-?[\d.]+%)", log),
             "excess_kurtosis": grab(r"excess kurtosis = (-?[\d.]+)", log),
