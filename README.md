@@ -1,0 +1,45 @@
+# Quant: from stochastic calculus to a real portfolio
+
+The project works in four stages. Each stage builds on the previous one, uses real Chinese A-share market data (akshare, falling back to yfinance), and tests the textbook model against what actually happens. A GitHub Actions workflow re-runs everything after each trading day, saves the results by date, and refreshes the charts below.
+
+## Stage 1: Geometric Brownian Motion (`stage1_gbm.py`)
+- Estimates drift μ and volatility σ from log returns, with standard errors. These show that μ is far less precisely known than σ.
+- Simulates GBM with Euler–Maruyama and with the exact Itô solution on the same Brownian paths, and confirms the strong convergence order of ½.
+- Tests the model's assumptions: fat tails (excess kurtosis, Jarque–Bera test), volatility clustering, and days that hit the price limit.
+
+![Stage 1](latest/stage1.png)
+
+## Stage 2: Black–Scholes, Greeks and implied volatility (`stage2_bsm_iv.py`)
+- A Black–Scholes pricer with exact formulas for the Greeks, checked against finite differences.
+- Greek profiles for an option on the Stage 1 stock.
+- An implied-volatility smile from real SSE 50ETF options, since A-shares have no single-stock options. The forward price and discount factor are backed out of put–call parity.
+
+![Stage 2](latest/stage2.png)
+
+## Stage 3: Delta hedging (`stage3_delta_hedge.py`)
+- In a GBM world, hedging error shrinks as O(N^-½) in the number of rebalances.
+- A historical backtest sells a 3-month at-the-money call on every past date and hedges it with trailing realised volatility. The P&L follows vega × (σ_hedge − σ_realised).
+- A-share trading frictions: commission, stamp duty on sales, and no trading at the daily price limits.
+
+![Stage 3](latest/stage3.png)
+
+## Stage 4: Applying it to a real portfolio (`stage4_my_portfolio.py`)
+- A risk snapshot: portfolio volatility, 1-day VaR (normal and historical), and the 1-year wealth distribution (GBM vs. resampled real returns).
+- Merton's optimal stock weight π* = (μ − r)/(γσ²), and how sensitive it is to the hard-to-estimate μ.
+- A synthetic protective put: replicates "shares + put" by moving money between the stock and a risk-free fund, in 100-share lots.
+
+![Stage 4](latest/stage4.png)
+
+## Daily automation (`run_daily.py`)
+Runs all four stages, puts the charts in `latest/` and dated archives in `reports/YYYY-MM-DD/`, and adds one summary row per day to `reports/history.csv`. Portfolio holdings come from environment variables (`SHARES`, `CASH`, `RATE`), so real positions never appear in the code.
+
+The workflow is in `.github/workflows/daily.yml` and runs at 16:30 Beijing time, Monday to Friday. It can also be started by hand from the Actions tab.
+
+## Getting started
+```
+pip install -r requirements.txt
+python run_daily.py --demo     # offline test
+python run_daily.py            # real data
+```
+
+Each stage can also be run on its own, for example `python stage1_gbm.py --demo`. Stages 3 and 4 import from `stage1_gbm.py`, so keep the scripts in the same folder.
