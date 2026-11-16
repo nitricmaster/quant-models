@@ -1,0 +1,68 @@
+##### stage1_gbm.py
+[akshare failed: 东方财富 push2 行情服务器断开了连接，通常是短时间内请求过多，当前 IP 被临时限流。首次限流一般约 5 分钟后恢复，反复触发后可能需要 40 分钟以上；等待期间不要重复调用东方财富的行情接口，否则会延长限流。] trying yfinance ...
+
+=== 600482: 2021-11-01 -> 2026-11-13 (1221 returns) ===
+sigma (annual) = 37.47%  ± 0.76%
+mu    (annual) = 17.91%  ± 16.68%   <- compare the two standard errors
+Ito correction sigma^2/2 = 7.02% per year (mean vs median growth)
+skew = 0.47, excess kurtosis = 2.65 (GBM: 0, 0)
+Jarque-Bera p-value = 3.05e-88  (normality rejected)
+lag-1 autocorr of squared returns = 0.20 (GBM: 0 -> vol clustering if > 0)
+days with |return| > 9.5% (price-limit hits): 11
+
+saved stage1_gbm_600482.png
+
+##### stage2_bsm_iv.py
+[A] analytic Greeks vs finite differences (call, S=100, K=105, T=3m)
+    delta  analytic   +0.43341   finite-diff   +0.43341   diff 4.8e-13
+    gamma  analytic   +0.02198   finite-diff   +0.02198   diff 1.9e-09
+    vega   analytic  +19.66856   finite-diff  +19.66856   diff 5.2e-06
+    theta  analytic  -14.50242   finite-diff  -14.50245   diff 2.4e-05
+    Black-Scholes PDE residual: 1.4e-15
+    implied-vol round trip: input 0.3580 -> recovered 0.3580
+
+[C] implied vols for 50ETF
+    expiry 2026-11-25 (T = 10d): forward 2.8784, implied rate +2.61%, ATM IV 13.8%
+      IV at K/F=0.92: 21.2%   at K/F=1.18: 38.8%   -> BSM says these should all equal 13.8%
+      pricing every strike with the ATM vol misprices by up to 100% of market price
+    expiry 2026-12-23 (T = 38d): forward 2.8633, implied rate +0.55%, ATM IV 13.7%
+      IV at K/F=0.93: 16.6%   at K/F=1.22: 27.7%   -> BSM says these should all equal 13.7%
+      pricing every strike with the ATM vol misprices by up to 100% of market price
+
+saved stage2_bsm_iv_50ETF.png
+
+##### stage3_delta_hedge.py
+[akshare failed: 东方财富 push2 行情服务器断开了连接，通常是短时间内请求过多，当前 IP 被临时限流。首次限流一般约 5 分钟后恢复，反复触发后可能需要 40 分钟以上；等待期间不要重复调用东方财富的行情接口，否则会延长限流。] trying yfinance ...
+
+=== 600482: short 60-day ATM call, daily delta hedge, r = 1.10% ===
+[A] GBM world: hedging-error std vs N has slope -0.48 (theory -0.50); daily hedging -> std = 11.2% of premium
+[B] 1102 overlapping windows on real history, hedge vol = trailing 60-day vol
+    P&L / premium: mean -6.6%, std 44.3%, 5% worst -95.3%, best 95% +50.1%
+    corr(P&L, sigma_hedge - sigma_realised) = 0.88; 1 vol point of gap = +2.7% of premium
+    perfect-foresight vol (hedge with realised): std 9.0% -> the rest of the risk is vol-forecast error
+[C] with A-share frictions: mean -7.4% (cost of frictions = 0.7% of premium), std 44.0%
+    note: overlapping windows are highly correlated; treat these as descriptive, not as t-stats
+
+saved stage3_delta_hedge_600482.png
+
+##### stage4_my_portfolio.py
+[akshare failed: 东方财富 push2 行情服务器断开了连接，通常是短时间内请求过多，当前 IP 被临时限流。首次限流一般约 5 分钟后恢复，反复触发后可能需要 40 分钟以上；等待期间不要重复调用东方财富的行情接口，否则会延长限流。] trying yfinance ...
+
+=== Portfolio: 1000 shares x 28.47 = 28,470  +  fund 100,000  =  128,470 ===
+[A] stock weight 22.2%; portfolio vol = 8.3% (stock alone 37.5%)
+    1-day 99% VaR: normal 1,595   historical 1,612   (limit-down day: 2,847)
+    1-year total return, GBM      : 5% -8.0%   median +3.4%   95% +24.3%
+    1-year total return, bootstrap: 5% -8.0%   median +3.3%   95% +24.5%
+    fund-only benchmark: +1.11%
+[B] Merton weight at gamma = 3: 40%  (mu ± 1 s.e.: 0% to 80%)
+    your 22% is optimal if gamma = 5.4 (taking mu-hat at face value)
+    or, at gamma = 3, if you believe mu = 10.4%  (vs mu-hat = 17.9% ± 16.7%)
+[C] synthetic protective put on 1000 shares, 60-day horizon, 1102 historical windows
+    put premium a real option would cost: median 1,801 (6.3% of the stock position)
+                              worst       5%   median      95%
+    unhedged                  -6.6%    -3.4%    +0.6%   +10.0%
+    synthetic put             -3.6%    -2.3%    -0.6%    +7.8%
+    ideal listed put          -2.8%    -2.2%    -0.7%    +8.6%
+    replication error (synthetic - ideal): std 818; with fractional shares 801 -> lot-size effect
+
+saved stage4_my_portfolio_600482.png
