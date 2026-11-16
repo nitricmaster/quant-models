@@ -118,6 +118,8 @@ def main():
     print(f"Trading date {date}, close {price}")
     for stale in HERE.glob("stage*_*.png"):                 # leftovers from manual runs
         stale.unlink()
+    for stale in (HERE / ".cache").glob("*.csv"):           # the price cache is shared within one run only;
+        stale.unlink()                                      # an earlier run today may predate today's bar
 
     jobs = [
         ("stage1_gbm.py", ["--symbol", SYMBOL]),
