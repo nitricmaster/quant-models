@@ -31,7 +31,8 @@ def latest_quote(symbol):
     except Exception:
         import yfinance as yf
         df = yf.download(symbol + ".SS", period="1mo", auto_adjust=False, progress=False)
-        return str(df.index[-1].date()), float(df["Close"].squeeze().iloc[-1])
+        close = df["Close"].squeeze().dropna()          # Yahoo lists today with a NaN close before the bar is in
+        return str(close.index[-1].date()), float(close.iloc[-1])
 
 
 def run(script, *args):
