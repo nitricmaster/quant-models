@@ -115,6 +115,8 @@ def main():
         print(f"{date} already filed (market closed or already run). Use --force to redo.")
         return
     print(f"Trading date {date}, close {price}")
+    for stale in HERE.glob("stage*_*.png"):                 # leftovers from manual runs
+        stale.unlink()
 
     jobs = [
         ("stage1_gbm.py", ["--symbol", SYMBOL]),
@@ -134,8 +136,9 @@ def main():
     (HERE / "latest").mkdir(exist_ok=True)
     (out / "log.txt").write_text(log, encoding="utf-8")
     for png in HERE.glob("stage*_*.png"):
-        stage = png.name.split("_")[0]                      # stage1.png, stage2.png ...
-        shutil.copy(png, HERE / "latest" / f"{stage}.png")
+        if not a.demo:                                      # demo charts never replace latest/
+            stage = png.name.split("_")[0]                  # stage1.png, stage2.png ...
+            shutil.copy(png, HERE / "latest" / f"{stage}.png")
         shutil.move(str(png), out / png.name)
 
     if not a.demo:                                          # one summary row per trading day
