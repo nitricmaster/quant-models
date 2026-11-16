@@ -2,6 +2,19 @@
 
 The project works in four stages. Each stage builds on the previous one, uses real Chinese A-share market data (akshare, falling back to yfinance), and tests the textbook model against what actually happens. A GitHub Actions workflow re-runs everything after each trading day, saves the results by date, and refreshes the charts below.
 
+## Daily results
+Updated automatically after each A-share trading day by [the daily workflow](.github/workflows/daily.yml).
+
+<!-- RESULTS:START -->
+**Latest trading day: 2026-11-13** · close 28.47 · [full log](reports/2026-11-13/log.txt)
+
+| Date | Close | σ (annual) | μ (annual) | Excess kurtosis | 50ETF ATM IV | Hedge P&L / premium | Stock weight | 1-day VaR (hist.) |
+|---|---|---|---|---|---|---|---|---|
+| 2026-11-13 | 28.47 | 37.47% | 17.91% | 2.65 | 13.8% | -6.6% | 22.2% | 1,612 |
+
+Showing the last 1 of 1 trading days. Full record: [reports/history.csv](reports/history.csv)
+<!-- RESULTS:END -->
+
 ## Stage 1: Geometric Brownian Motion (`stage1_gbm.py`)
 - Estimates drift μ and volatility σ from log returns, with standard errors. These show that μ is far less precisely known than σ.
 - Simulates GBM with Euler–Maruyama and with the exact Itô solution on the same Brownian paths, and confirms the strong convergence order of ½.

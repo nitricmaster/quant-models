@@ -30,6 +30,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add latest reports
+          git add latest reports README.md
           git diff --cached --quiet || git commit -m "Daily update $(date -u +%F)"
           git push

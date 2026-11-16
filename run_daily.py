@@ -4,6 +4,7 @@ Runs Stage 1-4 in one go and files the results by trading date.
   latest/                  newest figures (README can embed these, always current)
   reports/YYYY-MM-DD/      dated archive: figures + the printed numbers (log.txt)
   reports/history.csv      one row per trading day: sigma, mu, price, ATM implied vol ...
+  README.md                "Daily results" table rebuilt from history.csv
 
 Holdings are read from environment variables so they never sit in the code:
   SHARES (default 1000)   CASH (default 100000)   RATE (default 0.011)
@@ -45,6 +46,57 @@ def run(script, *args):
 def grab(pattern, text):
     m = re.search(pattern, text)
     return m.group(1) if m else ""
+
+
+COLUMNS = [  # (csv field, README header)
+    ("date", "Date"), ("close", "Close"), ("sigma", "σ (annual)"), ("mu", "μ (annual)"),
+    ("excess_kurtosis", "Excess kurtosis"), ("etf_atm_iv", "50ETF ATM IV"),
+    ("hedge_pnl_mean", "Hedge P&L / premium"), ("stock_weight", "Stock weight"),
+    ("var_1d_hist", "1-day VaR (hist.)"),
+]
+START, END = "<!-- RESULTS:START -->", "<!-- RESULTS:END -->"
+
+
+def update_readme(max_rows=30):
+    """Rewrite the block between the RESULTS markers in README.md from reports/history.csv."""
+    readme, hist = HERE / "README.md", HERE / "reports" / "history.csv"
+    if not readme.exists() or not hist.exists():
+        return
+    with hist.open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    if not rows:
+        return
+    rows.reverse()                                           # newest first
+
+    def cell(row, key):
+        v = row.get(key, "")
+        if key == "close":
+            try:
+                return f"{float(v):.2f}"
+            except ValueError:
+                pass
+        return v or "–"
+
+    last = rows[0]
+    lines = [
+        START,
+        f"**Latest trading day: {last['date']}** · close {cell(last, 'close')} · "
+        f"[full log](reports/{last['date']}/log.txt)",
+        "",
+        "| " + " | ".join(h for _, h in COLUMNS) + " |",
+        "|" + "---|" * len(COLUMNS),
+    ]
+    lines += ["| " + " | ".join(cell(r, k) for k, _ in COLUMNS) + " |" for r in rows[:max_rows]]
+    lines += ["", f"Showing the last {min(len(rows), max_rows)} of {len(rows)} trading days. "
+                  "Full record: [reports/history.csv](reports/history.csv)", END]
+
+    text = readme.read_text(encoding="utf-8")
+    if START in text and END in text:
+        head, rest = text.split(START, 1)
+        text = head + "\n".join(lines) + rest.split(END, 1)[1]
+    else:
+        text = text.rstrip() + "\n\n## Daily results\n" + "\n".join(lines) + "\n"
+    readme.write_text(text, encoding="utf-8")
 
 
 def main():
@@ -104,6 +156,7 @@ def main():
             if new:
                 w.writeheader()
             w.writerow(row)
+        update_readme()
     print(f"Filed under reports/{date}/ and latest/" + ("" if all_ok else "  (some stages failed, see log.txt)"))
     sys.exit(0 if all_ok else 1)
 
