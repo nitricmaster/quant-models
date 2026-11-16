@@ -6,3 +6,6 @@ __pycache__/
 
 # charts written to the top folder before run_daily.py files them away
 /stage*_*.png
+
+# per-day price cache written by stage1_gbm.py
+.cache/

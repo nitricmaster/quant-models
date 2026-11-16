@@ -16,6 +16,8 @@ Usage
   python stage1_gbm.py --demo           # no network needed
 """
 import argparse
+from datetime import date
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -26,8 +28,22 @@ TRADING_DAYS = 242  # A-share trading days per year (US: 252)
 
 # ---------------------------------------------------------------- data
 def load_prices(symbol: str, start: str, demo: bool) -> pd.Series:
+    """Daily adjusted closes. Fetched once per day and cached, so Stages 1, 3 and 4
+    share one download instead of hitting the data source three times in a row."""
     if demo:
         return synthetic_prices()
+    cache = Path(__file__).resolve().parent / ".cache" / f"{symbol}_{start}_{date.today():%Y%m%d}.csv"
+    if cache.exists():
+        s = pd.read_csv(cache, index_col=0, parse_dates=True).iloc[:, 0]
+        return s.rename(symbol)
+    s, source = _download(symbol, start)
+    print(f"[data source: {source}, {len(s)} rows, last {s.index[-1].date()}]")
+    cache.parent.mkdir(exist_ok=True)
+    s.to_csv(cache)
+    return s
+
+
+def _download(symbol: str, start: str):
     try:
         import akshare as ak
         # adjust="hfq": back-adjusted for dividends/splits, so returns are correct
@@ -35,14 +51,17 @@ def load_prices(symbol: str, start: str, demo: bool) -> pd.Series:
         df = fn(symbol=symbol, period="daily", start_date=start, adjust="hfq")
         s = pd.Series(df["收盘"].values, index=pd.to_datetime(df["日期"]), name=symbol)
         if len(s) > 50:
-            return s.astype(float)
+            return s.astype(float), "akshare/eastmoney"
     except Exception as e:
-        print(f"[akshare failed: {e}] trying yfinance ...")
+        print(f"[akshare failed: {str(e)[:80]}] trying yfinance ...")
     import yfinance as yf
     suffix = ".SS" if symbol.startswith(("6", "9")) else ".SZ"
     start_iso = f"{start[:4]}-{start[4:6]}-{start[6:]}"
     df = yf.download(symbol + suffix, start=start_iso, auto_adjust=True, progress=False)
-    return df["Close"].squeeze().dropna().rename(symbol)
+    s = df["Close"].squeeze().dropna().rename(symbol)
+    if len(s) < 50:
+        raise RuntimeError("both akshare and yfinance returned no data")
+    return s, "yfinance"
 
 
 def synthetic_prices(n=1200, seed=7) -> pd.Series:

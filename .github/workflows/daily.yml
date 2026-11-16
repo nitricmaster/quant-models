@@ -3,7 +3,7 @@ name: daily-update
 
 on:
   schedule:
-    - cron: "30 8 * * 1-5"      # 08:30 UTC = 16:30 Beijing, Mon-Fri
+    - cron: "17 11 * * 1-5"     # 11:17 UTC = 19:17 Beijing, Mon-Fri (data sources have settled by then)
   workflow_dispatch:             # adds a "Run workflow" button for manual runs
 
 permissions:
@@ -19,6 +19,7 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - name: Run all stages
+        id: stages
         run: python run_daily.py
         continue-on-error: true   # still commit whatever succeeded
         env:
@@ -33,3 +34,8 @@ jobs:
           git add latest reports README.md
           git diff --cached --quiet || git commit -m "Daily update $(date -u +%F)"
           git push
+      - name: Report failure
+        if: steps.stages.outcome == 'failure'
+        run: |
+          echo "run_daily.py failed - open the 'Run all stages' step above for the error"
+          exit 1
