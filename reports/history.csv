@@ -1,3 +1,4 @@
 date,close,source,sigma,mu,excess_kurtosis,etf_atm_iv,hedge_pnl_mean,stock_weight,var_1d_hist
 2026-11-13,28.47,yfinance,37.47%,17.91%,2.65,13.8%,-6.6%,22.2%,"1,612"
 2026-11-17,28.3,akshare/eastmoney,35.76%,16.71%,2.66,13.5%,-7.5%,22.1%,"1,549"
+2026-11-18,28.76,akshare/eastmoney,35.75%,17.00%,2.66,13.9%,-7.4%,22.3%,"1,574"
