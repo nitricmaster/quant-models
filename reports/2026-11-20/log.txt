@@ -1,0 +1,68 @@
+##### stage1_gbm.py
+[data source: akshare/eastmoney, 1217 rows, last 2026-11-20]
+
+=== 600482: 2021-11-01 -> 2026-11-20 (1216 returns) ===
+sigma (annual) = 35.74%  ± 0.72%
+mu    (annual) = 16.54%  ± 15.94%   <- compare the two standard errors
+Ito correction sigma^2/2 = 6.39% per year (mean vs median growth)
+skew = 0.48, excess kurtosis = 2.66 (GBM: 0, 0)
+Jarque-Bera p-value = 2.84e-88  (normality rejected)
+lag-1 autocorr of squared returns = 0.20 (GBM: 0 -> vol clustering if > 0)
+days with |return| > 9.5% (price-limit hits): 1
+
+saved stage1_gbm_600482.png
+
+##### stage2_bsm_iv.py
+[A] analytic Greeks vs finite differences (call, S=100, K=105, T=3m)
+    delta  analytic   +0.43341   finite-diff   +0.43341   diff 4.8e-13
+    gamma  analytic   +0.02198   finite-diff   +0.02198   diff 1.9e-09
+    vega   analytic  +19.66856   finite-diff  +19.66856   diff 5.2e-06
+    theta  analytic  -14.50242   finite-diff  -14.50245   diff 2.4e-05
+    Black-Scholes PDE residual: 1.4e-15
+    implied-vol round trip: input 0.3580 -> recovered 0.3580
+
+[C] implied vols for 50ETF
+    expiry 2026-11-25 (T = 5d): forward 2.8635, implied rate -13.02%, ATM IV 14.9%
+      IV at K/F=0.96: 20.9%   at K/F=1.03: 17.4%   -> BSM says these should all equal 14.9%
+      pricing every strike with the ATM vol misprices by up to 88% of market price
+    expiry 2026-12-23 (T = 33d): forward 2.8385, implied rate -3.55%, ATM IV 14.4%
+      IV at K/F=0.93: 17.8%   at K/F=1.23: 30.5%   -> BSM says these should all equal 14.4%
+      pricing every strike with the ATM vol misprices by up to 100% of market price
+
+saved stage2_bsm_iv_50ETF.png
+
+##### stage3_delta_hedge.py
+[data source: akshare/eastmoney, 1217 rows, last 2026-11-20]
+
+=== 600482: short 60-day ATM call, daily delta hedge, r = 1.10% ===
+[A] GBM world: hedging-error std vs N has slope -0.48 (theory -0.50); daily hedging -> std = 11.2% of premium
+[B] 1097 overlapping windows on real history, hedge vol = trailing 60-day vol
+    P&L / premium: mean -7.3%, std 45.7%, 5% worst -96.4%, best 95% +51.1%
+    corr(P&L, sigma_hedge - sigma_realised) = 0.88; 1 vol point of gap = +2.8% of premium
+    perfect-foresight vol (hedge with realised): std 9.1% -> the rest of the risk is vol-forecast error
+[C] with A-share frictions: mean -8.6% (cost of frictions = 1.3% of premium), std 46.6%
+    note: overlapping windows are highly correlated; treat these as descriptive, not as t-stats
+
+saved stage3_delta_hedge_600482.png
+
+##### stage4_my_portfolio.py
+[data source: akshare/eastmoney, 1217 rows, last 2026-11-20]
+
+=== Portfolio: 1000 shares x 28.10 = 28,100  +  fund 100,000  =  128,100 ===
+[A] stock weight 21.9%; portfolio vol = 7.8% (stock alone 35.7%)
+    1-day 99% VaR: normal 1,502   historical 1,537   (limit-down day: 2,810)
+    1-year total return, GBM      : 5% -7.6%   median +3.2%   95% +22.5%
+    1-year total return, bootstrap: 5% -7.5%   median +3.1%   95% +22.8%
+    fund-only benchmark: +1.11%
+[B] Merton weight at gamma = 3: 40%  (mu ± 1 s.e.: -1% to 82%)
+    your 22% is optimal if gamma = 5.5 (taking mu-hat at face value)
+    or, at gamma = 3, if you believe mu = 9.5%  (vs mu-hat = 16.5% ± 15.9%)
+[C] synthetic protective put on 1000 shares, 60-day horizon, 1097 historical windows
+    put premium a real option would cost: median 1,678 (6.0% of the stock position)
+                              worst       5%   median      95%
+    unhedged                  -6.3%    -3.3%    +0.6%    +9.4%
+    synthetic put             -3.4%    -2.2%    -0.6%    +7.3%
+    ideal listed put          -2.6%    -2.3%    -0.6%    +8.2%
+    replication error (synthetic - ideal): std 808; with fractional shares 791 -> lot-size effect
+
+saved stage4_my_portfolio_600482.png
