@@ -8,10 +8,11 @@ Updated automatically after each A-share trading day by [the daily workflow](.gi
 Note: σ and μ depend on which data source answered that day. akshare and yfinance adjust for dividends differently, so σ can differ by more than a percentage point between them (e.g. 35.8% vs 37.47%), well beyond its ~0.8% standard error. The *Data source* column says which one was used; compare rows from the same source.
 
 <!-- RESULTS:START -->
-**Latest trading day: 2026-11-26** · close 26.08 · [full log](reports/2026-11-26/log.txt)
+**Latest trading day: 2026-11-27** · close 27.93 · [full log](reports/2026-11-27/log.txt)
 
 | Date | Close | σ (annual) | μ (annual) | Excess kurtosis | 50ETF ATM IV | Hedge P&L / premium | Stock weight | 1-day VaR (hist.) | Data source |
 |---|---|---|---|---|---|---|---|---|---|
+| 2026-11-27 | 27.93 | 35.87% | 16.43% | 2.61 | 17.1% | -7.1% | 21.8% | 1,526 | akshare/eastmoney |
 | 2026-11-26 | 26.08 | 37.47% | 16.39% | 2.63 | 14.4% | -6.3% | 20.7% | 1,475 | yfinance |
 | 2026-11-25 | 26.45 | 35.78% | 15.40% | 2.63 | 15.0% | -7.2% | 20.9% | 1,446 | akshare/eastmoney |
 | 2026-11-23 | 26.88 | 35.77% | 15.72% | 2.64 | 14.9% | -7.3% | 21.2% | 1,470 | akshare/eastmoney |
@@ -21,7 +22,7 @@ Note: σ and μ depend on which data source answered that day. akshare and yfina
 | 2026-11-17 | 28.30 | 35.76% | 16.71% | 2.66 | 13.5% | -7.5% | 22.1% | 1,549 | akshare/eastmoney |
 | 2026-11-13 | 28.47 | 37.47% | 17.91% | 2.65 | 13.8% | -6.6% | 22.2% | 1,612 | yfinance |
 
-Showing the last 8 of 8 trading days. Full record: [reports/history.csv](reports/history.csv)
+Showing the last 9 of 9 trading days. Full record: [reports/history.csv](reports/history.csv)
 <!-- RESULTS:END -->
 
 ## Stage 1: Geometric Brownian Motion (`stage1_gbm.py`)
